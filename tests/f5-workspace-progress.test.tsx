@@ -27,6 +27,7 @@ describe("F5 工作台生成进度", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "旧项目" }));
     await screen.findByRole("link", { name: "打开项目" });
+    expect(screen.getByTitle("生成结果预览")).toHaveAttribute("srcdoc", "<html>old</html>");
     fireEvent.change(screen.getByLabelText("描述你的应用"), { target: { value: "加一个筛选器" } });
     fireEvent.click(screen.getByRole("button", { name: "生成" }));
     expect(await screen.findByText("请求中")).toBeInTheDocument();
@@ -42,6 +43,7 @@ describe("F5 工作台生成进度", () => {
     close();
     expect(await screen.findByRole("alert")).toHaveTextContent("模型暂时不可用");
     expect(screen.getByRole("link", { name: "打开项目" })).toHaveAttribute("href", `/p/${token}`);
+    expect(screen.getByTitle("生成结果预览")).toHaveAttribute("srcdoc", "<html>old</html>");
   });
 
   it("状态流无完成事件就结束时显示失败，保留可重试的输入", async () => {

@@ -24,15 +24,22 @@ describe("F4 新建与历史恢复", () => {
     fireEvent.click(await screen.findByRole("button", { name: "旧项目" }));
     expect(await screen.findByText(/旧需求/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "打开项目" })).toHaveAttribute("href", `/p/${token}`);
+    expect(screen.getByTitle("生成结果预览")).toHaveAttribute("srcdoc", "<html>old</html>");
+    expect(screen.getByRole("tab", { name: "预览" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.click(screen.getByRole("tab", { name: "对话" }));
+    expect(screen.getByRole("tab", { name: "对话" })).toHaveAttribute("aria-selected", "true");
 
     fireEvent.click(screen.getByRole("button", { name: "新建项目" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/projects", { method: "POST" }));
     await screen.findByRole("button", { name: "未命名项目" });
     expect(screen.queryByText(/旧需求/)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "打开项目" })).not.toBeInTheDocument();
+    expect(screen.queryByTitle("生成结果预览")).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "对话" })).toHaveAttribute("aria-selected", "true");
 
     fireEvent.click(screen.getByRole("button", { name: "旧项目" }));
     expect(await screen.findByText(/旧需求/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "打开项目" })).toHaveAttribute("href", `/p/${token}`);
+    expect(screen.getByTitle("生成结果预览")).toHaveAttribute("srcdoc", "<html>old</html>");
   });
 });

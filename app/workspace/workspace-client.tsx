@@ -3,6 +3,7 @@
 import React, { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { buildIterationRequest } from "../../lib/conversation/context";
 import type { GenerateHistoryItem } from "../../lib/ai/generate";
+import { previewSandbox } from "../../lib/html/preview";
 
 type Project = { id: string; title: string; current_html?: string | null; share_token?: string };
 type Message = { id?: string; role: "user" | "assistant"; content: string; html?: string | null };
@@ -25,6 +26,7 @@ export default function WorkspaceClient({ email }: { email: string }) {
   const [titleDraft, setTitleDraft] = useState("");
   const [renameBusy, setRenameBusy] = useState(false);
   const [renameError, setRenameError] = useState("");
+  const [mobileView, setMobileView] = useState<"chat" | "preview">("chat");
   const messagesRef = useRef<HTMLDivElement>(null);
   const copyFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -73,6 +75,7 @@ export default function WorkspaceClient({ email }: { email: string }) {
       setError("");
       setEditingTitle(false);
       setRenameError("");
+      setMobileView(data.project.current_html ? "preview" : "chat");
     } catch {
       setError("项目读取失败，请重试");
     } finally {
@@ -99,6 +102,7 @@ export default function WorkspaceClient({ email }: { email: string }) {
       setPendingPrompt("");
       setGenerationStage("idle");
       setPrompt("");
+      setMobileView("chat");
       await loadProjects();
     } catch {
       setError("新建项目失败，请重试");
@@ -162,6 +166,7 @@ export default function WorkspaceClient({ email }: { email: string }) {
             setShareToken(data.shareToken);
             setLinkFeedback(null);
             setMessages((items) => [...items, { role: "user", content: submittedPrompt }, { role: "assistant", content: "页面已生成，项目链接可直接打开。", html: data.html }]);
+            setMobileView("preview");
             await loadProjects();
           }
         }
@@ -229,7 +234,7 @@ export default function WorkspaceClient({ email }: { email: string }) {
   const activeProject = projects.find((project) => project.id === projectId);
 
   return (
-    <main className="workspace-layout">
+    <main className="workspace-layout" data-mobile-view={mobileView}>
         <aside className="workspace-sidebar">
           <h1>工作台</h1>
           <button className="workspace-new-project" type="button" onClick={() => void handleNewProject()} disabled={busy || projectLoading}>新建项目</button>
@@ -238,6 +243,10 @@ export default function WorkspaceClient({ email }: { email: string }) {
             <button type="button" key={project.id} className={projectId === project.id ? "active" : ""} onClick={() => void openProject(project.id)} disabled={busy || projectLoading}>{project.title}</button>
           ))}</div>
         </aside>
+        <div className="workspace-mobile-tabs" role="tablist" aria-label="工作台视图">
+          <button type="button" role="tab" aria-selected={mobileView === "chat"} onClick={() => setMobileView("chat")}>对话</button>
+          <button type="button" role="tab" aria-selected={mobileView === "preview"} onClick={() => setMobileView("preview")}>预览</button>
+        </div>
         <section className="workspace-main">
           <header className="workspace-thread-header">
             <div>
@@ -274,20 +283,31 @@ export default function WorkspaceClient({ email }: { email: string }) {
               </div> : null}
             </div>
           </div>
-          {projectPath ? <div className="workspace-project-link">
-            <span>项目访问链接</span>
-            <a href={projectPath} target="_blank" rel="noopener noreferrer" aria-label="打开项目" onClick={() => setLinkFeedback("opened")}>{projectUrl || projectPath}</a>
-            <button type="button" className={linkFeedback === "copied" ? "is-copied" : ""} onClick={() => void handleCopyLink()}>{linkFeedback === "copied" ? "已复制" : "复制链接"}</button>
-            {linkFeedback ? <small className="workspace-link-feedback" role={linkFeedback === "copy-error" ? "alert" : "status"}>
-              {linkFeedback === "copied" ? "已复制链接" : linkFeedback === "copy-error" ? "复制失败，请手动复制链接" : "已在新标签页打开"}
-            </small> : null}
-          </div> : null}
           <form className="workspace-composer" onSubmit={handleGenerate}>
             <label htmlFor="prompt">描述你的应用</label>
             <textarea id="prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={handleComposerKeyDown} placeholder="例如：做一个可增删改的待办事项应用" rows={3} />
             <div className="composer-row"><button className="primary-button" type="submit" aria-label="生成" disabled={busy || !prompt.trim()}>{busy ? "生成中…" : "生成"}<span>→</span></button></div>
           </form>
           {error ? <p className="workspace-error" role="alert">{error}</p> : null}
+        </section>
+        <section className="workspace-preview" aria-label="产物预览区域">
+          <header className="workspace-preview-header">
+            <h2>产物预览</h2>
+            {projectPath ? <div className="workspace-preview-actions">
+              <a href={projectPath} target="_blank" rel="noopener noreferrer" aria-label="打开项目" title="在新标签页打开项目" onClick={() => setLinkFeedback("opened")}>打开项目 ↗</a>
+              <button type="button" className={linkFeedback === "copied" ? "is-copied" : ""} onClick={() => void handleCopyLink()}>{linkFeedback === "copied" ? "已复制" : "复制链接"}</button>
+            </div> : null}
+          </header>
+          {projectPath ? <div className="workspace-project-link">
+            <span>项目访问链接</span>
+            <a href={projectPath} target="_blank" rel="noopener noreferrer" aria-label="项目链接" title="在新标签页打开项目" onClick={() => setLinkFeedback("opened")}>{projectUrl || projectPath}</a>
+            {linkFeedback ? <small className="workspace-link-feedback" role={linkFeedback === "copy-error" ? "alert" : "status"}>
+              {linkFeedback === "copied" ? "已复制链接" : linkFeedback === "copy-error" ? "复制失败，请手动复制链接" : "已在新标签页打开"}
+            </small> : null}
+          </div> : null}
+          <div className="workspace-preview-content">
+            {currentHtml ? <iframe title="生成结果预览" srcDoc={currentHtml} sandbox={previewSandbox} /> : <div className="workspace-preview-empty">生成后将在这里预览应用</div>}
+          </div>
         </section>
     </main>
   );

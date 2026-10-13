@@ -9,7 +9,7 @@ const html = "<!doctype html><html><body>Todo</body></html>";
 describe("F3 项目访问链接", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("生成后展示独立链接并移除内嵌预览", async () => {
+  it("生成后在右栏预览并保留独立访问链接", async () => {
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
         controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ stage: "success", projectId: "p1", shareToken: token, html })}\n\n`));
@@ -29,7 +29,9 @@ describe("F3 项目访问链接", () => {
     const link = await screen.findByRole("link", { name: /打开项目/ });
     expect(link).toHaveAttribute("href", `/p/${token}`);
     expect(link).toHaveAttribute("target", "_blank");
-    expect(screen.queryByTitle("生成结果预览")).not.toBeInTheDocument();
+    const preview = screen.getByTitle("生成结果预览");
+    expect(preview).toHaveAttribute("srcdoc", html);
+    expect(preview).toHaveAttribute("sandbox", "allow-scripts allow-forms");
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
   });
 });

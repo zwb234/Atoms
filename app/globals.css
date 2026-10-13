@@ -384,3 +384,141 @@ body:has(.workspace-page) { background: #0a0b0a; }.workspace-page { min-height: 
 @media (prefers-reduced-motion: reduce) {
   .workspace-loading-dots i { animation: none; }
 }
+
+/* Three-column workspace and isolated app preview. */
+.workspace-layout {
+  grid-template-columns: 226px minmax(320px, .82fr) minmax(430px, 1.18fr);
+  max-width: none;
+}
+.workspace-main {
+  border-right: 1px solid #2b322d;
+}
+.workspace-mobile-tabs { display: none; }
+.workspace-preview {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 119px);
+  min-height: 570px;
+  min-width: 0;
+  overflow: hidden;
+}
+.workspace-preview-header {
+  align-items: center;
+  border-bottom: 1px solid #2b322d;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 76px;
+  padding: 15px 22px;
+}
+.workspace-preview-header h2 {
+  color: #eef3ea;
+  font-size: 16px;
+  font-weight: 650;
+  margin: 0;
+  white-space: nowrap;
+}
+.workspace-preview-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+.workspace-preview-actions a,
+.workspace-preview-actions button {
+  background: #263125;
+  border: 1px solid #455c33;
+  border-radius: 6px;
+  color: #d4ff57;
+  font-size: 12px;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+.workspace-preview-actions a:hover,
+.workspace-preview-actions button:hover,
+.workspace-preview-actions a:focus-visible,
+.workspace-preview-actions button:focus-visible {
+  background: #34472e;
+  border-color: #a5cd6b;
+}
+.workspace-preview-actions button.is-copied {
+  background: #d4ff57;
+  color: #172009;
+}
+.workspace-preview .workspace-project-link {
+  align-items: flex-start;
+  border-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 22px;
+}
+.workspace-preview .workspace-project-link a {
+  font-size: 12px;
+  width: 100%;
+}
+.workspace-preview-content {
+  background: #f6f7f6;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.workspace-preview-content iframe {
+  background: #fff;
+  border: 0;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+.workspace-preview-empty {
+  align-items: center;
+  color: #6d756f;
+  display: flex;
+  font-size: 13px;
+  height: 100%;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+@media (max-width: 1100px) and (min-width: 951px) {
+  .workspace-layout { grid-template-columns: 190px minmax(300px, .85fr) minmax(350px, 1.15fr); }
+  .workspace-sidebar { padding-left: 10px; padding-right: 10px; }
+  .workspace-thread-header,
+  .workspace-messages,
+  .workspace-composer { padding-left: 18px; padding-right: 18px; }
+  .workspace-preview-header { flex-wrap: wrap; }
+}
+@media (max-width: 950px) {
+  .workspace-layout { display: flex; flex-direction: column; }
+  .workspace-sidebar { border-bottom: 1px solid #2b322d; border-right: 0; flex: none; order: 0; padding: 14px; }
+  .workspace-sidebar h1 { display: none; }
+  .workspace-sidebar h2 { margin: 14px 8px 8px; }
+  .workspace-new-project { margin: 0 8px; width: calc(100% - 16px); }
+  .project-list { display: flex; gap: 5px; overflow-x: auto; }
+  .project-list button { flex: 0 0 auto; max-width: 180px; }
+  .workspace-mobile-tabs {
+    border-bottom: 1px solid #2b322d;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .workspace-mobile-tabs button {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: #9aa897;
+    font-size: 13px;
+    padding: 11px;
+  }
+  .workspace-mobile-tabs button[aria-selected="true"] {
+    border-bottom-color: #d4ff57;
+    color: #e7f6c9;
+  }
+  .workspace-main,
+  .workspace-preview { height: calc(100dvh - 240px); min-height: 480px; order: 1; }
+  .workspace-main { border-right: 0; }
+  .workspace-layout[data-mobile-view="chat"] .workspace-preview,
+  .workspace-layout[data-mobile-view="preview"] .workspace-main { display: none; }
+  .workspace-preview-header { min-height: 62px; padding: 10px 14px; }
+  .workspace-preview-header h2 { font-size: 14px; }
+  .workspace-preview .workspace-project-link { padding: 9px 14px; }
+}
